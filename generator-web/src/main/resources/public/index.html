@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Service Generator</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+:root {
+    --paper: #f6f3ee;
+    --paper-raised: #fbf8f2;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4740;
+    --ink-faint: #8a8378;
+    --rule: #c9bfaf;
+    --rule-soft: #e4ddce;
+    --burgundy: #6b2d2b;
+    --teal: #1f4a52;
+    --forest: #3a5c3a;
+    --ochre: #a8761a;
+    --wrong: #f3e4e0;
+    --right: #e3ebe0;
+    --font-serif: "Charter", "Iowan Old Style", "Palatino Linotype", "Georgia", serif;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-serif);
+    line-height: 1.6;
+}
+.wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+}
+header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1.75rem;
+    margin-bottom: 2.5rem;
+}
+.eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--burgundy);
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+h1 {
+    font-family: var(--font-serif);
+    font-size: 2.4rem;
+    margin: 0 0 0.75rem 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+h1 em { font-style: italic; color: var(--burgundy); font-weight: 400; }
+.deck {
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    max-width: 48em;
+    margin: 0;
+}
+h2 {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 2.5rem 0 1rem 0;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--rule);
+}
+h3 {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--teal);
+    margin: 1.5rem 0 0.5rem;
+}
+.card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    padding: 1.75rem;
+    border-radius: 2px;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem;
+}
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.field.wide { grid-column: 1 / -1; }
+label {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+label .hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-faint);
+    font-size: 0.78rem;
+    margin-left: 0.4em;
+}
+input[type="text"] {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: 0.55rem 0.7rem;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink);
+}
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(107, 45, 43, 0.1);
+}
+.checks {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.3rem;
+    grid-column: 1 / -1;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+}
+.checks label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    grid-column: 1 / -1;
+}
+button {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.6rem 1.3rem;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.15s ease;
+}
+button:hover { background: var(--burgundy); border-color: var(--burgundy); }
+button.secondary {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--ink);
+}
+button.secondary:hover { background: var(--rule-soft); color: var(--ink); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.output {
+    margin-top: 2rem;
+    display: none;
+}
+.output.visible { display: block; }
+.problem {
+    background: var(--wrong);
+    border: 1px solid #c99a93;
+    border-left: 3px solid var(--burgundy);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+}
+.problem h3 {
+    color: var(--burgundy);
+    margin: 0 0 0.5rem;
+}
+.problem p { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.problem ul { margin: 0.5rem 0 0; padding-left: 1.5rem; font-family: var(--font-mono); font-size: 0.85rem; }
+.problem li { margin: 0.2rem 0; }
+.summary {
+    background: var(--right);
+    border: 1px solid #9bbd92;
+    border-left: 3px solid var(--forest);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+}
+.plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    margin: 0.75rem 0;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+}
+.plan-table th, .plan-table td {
+    text-align: left;
+    padding: 0.5rem 0.85rem;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+}
+.plan-table th {
+    background: var(--rule-soft);
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--ink);
+    color: var(--ink);
+}
+.plan-table td.from { color: var(--burgundy); }
+.plan-table td.arrow { width: 1.5rem; color: var(--ink-faint); font-family: var(--font-sans); }
+.plan-table td.to { color: var(--forest); font-weight: 600; }
+.plan-table td.desc { color: var(--ink-soft); font-family: var(--font-sans); font-size: 0.78rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 1rem; }
+.chip {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.15rem 0.6rem;
+    background: var(--rule-soft);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    border-radius: 10px;
+}
+.chip.b { color: var(--burgundy); border-color: #c8a98a; background: #f1e2e1; }
+.spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--rule);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+details.file-list {
+    margin-top: 1rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--rule);
+    background: var(--paper-raised);
+}
+details.file-list summary {
+    cursor: pointer;
+    padding: 0.4rem 0;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+details.file-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    max-height: 20rem;
+    overflow-y: auto;
+}
+details.file-list li {
+    padding: 0.15rem 0.5rem;
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--ink-soft);
+}
+details.file-list li .kind {
+    display: inline-block;
+    width: 14rem;
+    color: var(--teal);
+}
+details.file-list li .reps { color: var(--ochre); margin-left: 0.4rem; }
+footer {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+}
+@media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+    h1 { font-size: 1.9rem; }
+    .wrap { padding: 2rem 1rem 3rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <p class="eyebrow">Micronaut DDD + Hexagonal Starter</p>
+        <h1>Service <em>Generator</em></h1>
+        <p class="deck">
+            Fork the starter into a new bounded context without hand-renaming anything. Point the tool at a template directory, pick a new context name, and get a complete project with every module directory, Maven artifact id, Java package, and <code>Packages.BASE</code> constant rewritten atomically.
+        </p>
+    </header>
+
+    <form id="form" class="card">
+        <h2>Request</h2>
+        <div class="grid">
+            <div class="field wide">
+                <label for="source">Source directory <span class="hint">absolute path to the template with a parent pom.xml</span></label>
+                <input id="source" name="source" type="text" placeholder="/Users/you/code/order-management-starter" required>
+            </div>
+            <div class="field wide">
+                <label for="target">Target directory <span class="hint">must not be the source or nested inside it</span></label>
+                <input id="target" name="target" type="text" placeholder="/Users/you/code/billing-service" required>
+            </div>
+            <div class="field">
+                <label for="newContext">New context name <span class="hint">lowercase, 2 to 32 chars</span></label>
+                <input id="newContext" name="newContext" type="text" placeholder="billing" required pattern="[a-z][a-z0-9_]*">
+            </div>
+            <div class="field">
+                <label for="oldContext">Old context name <span class="hint">defaults to "order"</span></label>
+                <input id="oldContext" name="oldContext" type="text" placeholder="order">
+            </div>
+            <div class="checks">
+                <label><input id="force" type="checkbox"> Overwrite non-empty target</label>
+                <label><input id="dryRun" type="checkbox"> Dry run (write nothing)</label>
+            </div>
+            <div class="actions">
+                <button id="previewBtn" type="button" class="secondary">Preview plan</button>
+                <button id="generateBtn" type="button">Generate</button>
+                <span id="busy" style="display:none" aria-hidden="true"><span class="spinner"></span></span>
+            </div>
+        </div>
+    </form>
+
+    <section id="output" class="output">
+        <div id="problem" class="problem" style="display:none">
+            <h3 id="problemTitle">Error</h3>
+            <p id="problemDetail"></p>
+            <ul id="problemList"></ul>
+        </div>
+        <div id="preview" style="display:none">
+            <h2>Plan</h2>
+            <h3>Detected template</h3>
+            <div class="chips">
+                <span class="chip">parent: <strong id="pdParent"></strong></span>
+                <span class="chip">base package: <strong id="pdBase"></strong></span>
+                <span class="chip b">old context: <strong id="pdOld"></strong></span>
+            </div>
+            <h3>Modules to rename</h3>
+            <div id="pdModules" class="chips"></div>
+            <h3>Modules preserved verbatim</h3>
+            <div id="pdExtra" class="chips"></div>
+            <h3>Path rules</h3>
+            <table class="plan-table" id="pathTable">
+                <thead><tr><th>From</th><th></th><th>To</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <h3>Content rules</h3>
+            <table class="plan-table" id="contentTable">
+                <thead><tr><th>From</th><th></th><th>To</th><th>Where</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div id="result" style="display:none">
+            <h2>Generation report</h2>
+            <pre id="resultSummary" class="summary"></pre>
+            <details class="file-list">
+                <summary id="fileSummary">File list</summary>
+                <ul id="fileList"></ul>
+            </details>
+        </div>
+    </section>
+
+    <footer>
+        Pass <code>--dry-run</code> or tick the box to preview without writing.
+        See the CLI (<code>service-generator --help</code>) for the same functionality on the command line.
+    </footer>
+</div>
+
+<script>
+(function () {
+    const $ = (id) => document.getElementById(id);
+    const outputEl = $('output');
+    const problemEl = $('problem');
+    const previewEl = $('preview');
+    const resultEl = $('result');
+    const busy = $('busy');
+
+    function body() {
+        return {
+            source: $('source').value.trim(),
+            target: $('target').value.trim(),
+            newContext: $('newContext').value.trim(),
+            oldContext: $('oldContext').value.trim() || null,
+            force: $('force').checked,
+            dryRun: $('dryRun').checked,
+        };
+    }
+
+    function hide(el) { el.style.display = 'none'; }
+    function show(el) { el.style.display = 'block'; }
+
+    function showProblem(title, detail, errors) {
+        $('problemTitle').textContent = title;
+        $('problemDetail').textContent = detail || '';
+        const ul = $('problemList');
+        ul.innerHTML = '';
+        (errors || []).forEach(e => {
+            const li = document.createElement('li');
+            li.textContent = (e.field ? e.field + ': ' : '') + e.message;
+            ul.appendChild(li);
+        });
+        show(outputEl); outputEl.classList.add('visible');
+        show(problemEl);
+        hide(previewEl); hide(resultEl);
+    }
+
+    function clearProblem() { hide(problemEl); }
+
+    function populatePreview(data) {
+        $('pdParent').textContent = data.detectedParentArtifactId;
+        $('pdBase').textContent = data.detectedBasePackage;
+        $('pdOld').textContent = data.detectedOldContext;
+
+        const mods = $('pdModules');
+        mods.innerHTML = '';
+        (data.contextModules || []).forEach(m => {
+            const c = document.createElement('span');
+            c.className = 'chip b';
+            c.textContent = m;
+            mods.appendChild(c);
+        });
+
+        const extras = $('pdExtra');
+        extras.innerHTML = '';
+        (data.additionalModules || []).forEach(m => {
+            const c = document.createElement('span');
+            c.className = 'chip';
+            c.textContent = m;
+            extras.appendChild(c);
+        });
+
+        const pathBody = $('pathTable').querySelector('tbody');
+        pathBody.innerHTML = '';
+        (data.pathRules || []).forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="from">${r.from}</td><td class="arrow">&rarr;</td><td class="to">${r.to}</td>`;
+            pathBody.appendChild(tr);
+        });
+
+        const contentBody = $('contentTable').querySelector('tbody');
+        contentBody.innerHTML = '';
+        (data.contentRules || []).forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="from">${r.from}</td><td class="arrow">&rarr;</td><td class="to">${r.to}</td><td class="desc">${r.description || ''}</td>`;
+            contentBody.appendChild(tr);
+        });
+
+        show(outputEl); outputEl.classList.add('visible');
+        show(previewEl);
+        hide(resultEl);
+    }
+
+    function populateResult(data) {
+        $('resultSummary').textContent = data.summary;
+        $('fileSummary').textContent = 'File list (' + data.total + ' entries)';
+        const list = $('fileList');
+        list.innerHTML = '';
+        (data.changes || []).forEach(c => {
+            const li = document.createElement('li');
+            const changePart = c.source === c.target
+                ? c.source
+                : c.source + ' \u2192 ' + c.target;
+            li.innerHTML = `<span class="kind">${c.kind}</span>${changePart}<span class="reps">${c.replacements ? '(' + c.replacements + ')' : ''}</span>`;
+            list.appendChild(li);
+        });
+
+        show(outputEl); outputEl.classList.add('visible');
+        show(resultEl);
+    }
+
+    async function call(path) {
+        clearProblem();
+        busy.style.display = 'inline';
+        try {
+            const res = await fetch('/api/v1' + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body()),
+            });
+            const text = await res.text();
+            let payload = null;
+            try { payload = text ? JSON.parse(text) : null; } catch (_) { /* non-json */ }
+
+            if (!res.ok) {
+                if (payload && payload.title) {
+                    showProblem(payload.title, payload.detail, payload.errors);
+                } else {
+                    showProblem('HTTP ' + res.status, text || res.statusText, []);
+                }
+                return null;
+            }
+            return payload;
+        } catch (e) {
+            showProblem('Network error', e.message, []);
+            return null;
+        } finally {
+            busy.style.display = 'none';
+        }
+    }
+
+    $('previewBtn').addEventListener('click', async () => {
+        const data = await call('/preview');
+        if (data) populatePreview(data);
+    });
+
+    $('generateBtn').addEventListener('click', async () => {
+        if ($('dryRun').checked) {
+            const preview = await call('/preview');
+            if (preview) populatePreview(preview);
+        }
+        const data = await call('/generate');
+        if (data) populateResult(data);
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+micronaut:
+  application:
+    name: service-generator
+  server:
+    port: 8080
+    cors:
+      enabled: false
+  router:
+    static-resources:
+      ui:
+        enabled: true
+        mapping: /**
+        paths: classpath:public
+  executors:
+    io:
+      virtual: true
+    blocking:
+      virtual: true
+
+logger:
+  levels:
+    com.enterprise.generator: INFO
